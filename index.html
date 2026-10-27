@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Marcel &amp; Bubi Kasse</title>
+<meta name="theme-color" content="#1f6f5c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kasse">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+:root{color-scheme:light}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+</style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="wrap" id="setup" hidden>
+  <header><div><div class="sub">Marcel &amp; Bubi</div><h1>Kasse einrichten</h1></div></header>
+  <div class="setup">
+    <p>Diese App ist noch mit keiner gemeinsamen Kasse verbunden.</p>
+    <p>Hast du von Marcel oder Bubi einen Link bekommen? Dann öffne einfach diesen Link. Oder füge hier den Code ein:</p>
+    <form class="share" id="joinForm" novalidate>
+      <input id="joinCode" placeholder="Code aus dem Link" autocomplete="off">
+      <button class="primary" type="submit">Verbinden</button>
+    </form>
+    <p>Oder starte ganz neu:</p>
+    <button class="ghost" id="createBtn" style="align-self:flex-start">Neue gemeinsame Kasse anlegen</button>
+    <span class="err" id="setupErr" hidden></span>
+  </div>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <div style="min-width:0">
+      <div class="sub">Marcel &amp; Bubi</div>
+      <h1 id="kName">…</h1>
+    </div>
+    <button class="ghost" id="editKasse">Kasse bearbeiten</button>
+  </header>
+
+  <nav class="kassen" id="kassen" aria-label="Kassen"></nav>
+
+  <form class="kpanel" id="kPanel" hidden novalidate>
+    <label for="kInput" class="lbl" id="kLbl">Name der neuen Kasse</label>
+    <div class="toolbar" style="flex-wrap:nowrap">
+      <input id="kInput" placeholder="z. B. Urlaub Gardasee 2026" autocomplete="off">
+      <button type="submit" class="primary" id="kSave">Erstellen</button>
+    </div>
+    <div class="actions">
+      <button type="button" class="ghost danger" id="kDel" hidden>Kasse löschen</button>
+      <button type="button" class="ghost" id="kCancel" style="margin-left:auto">Abbrechen</button>
+    </div>
+    <span class="err" id="kErr" hidden></span>
+  </form>
+
+  <section class="balances" id="balances" aria-label="Saldo"></section>
+
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <div class="toolbar" style="justify-content:space-between">
+      <h2>Einträge</h2>
+      <div class="toolbar" id="filters"></div>
+    </div>
+    <div class="list" id="list"><div class="empty">Lade Daten …</div></div>
+  </section>
+
+  <div class="note">
+    <span>Link für das zweite Handy (enthält den Zugang zu euren Daten, nur an Bubi schicken):</span>
+    <div class="share" style="width:100%">
+      <input id="shareLink" readonly>
+      <button class="ghost" id="copyLink">Kopieren</button>
+    </div>
+    <span class="sync" id="syncState"></span>
+  </div>
+</div>
+
+<button class="primary fab" id="addBtn" hidden>+ Ausgabe</button>
+
+<div class="scrim" id="scrim" hidden>
+  <form class="sheet" id="form" novalidate>
+    <div class="actions" style="align-items:center">
+      <h2 id="formTitle">Neue Ausgabe</h2>
+      <button type="button" class="ghost" id="cancel">Abbrechen</button>
+    </div>
+    <div class="seg" id="kindSeg" role="group" aria-label="Art">
+      <button type="button" data-v="expense">Ausgabe</button>
+      <button type="button" data-v="payment">Rückzahlung</button>
+    </div>
+    <div class="field" id="descField">
+      <label for="desc">Beschreibung</label>
+      <input id="desc" placeholder="z. B. Migros Wocheneinkauf" autocomplete="off">
+    </div>
+    <div class="two">
+      <div class="field">
+        <label for="amount">Betrag</label>
+        <input id="amount" inputmode="decimal" placeholder="0.00" class="num">
+      </div>
+      <div class="field">
+        <span class="lbl">Währung</span>
+        <div class="seg" id="curSeg" role="group" aria-label="Währung">
+          <button type="button" data-v="CHF">CHF</button>
+          <button type="button" data-v="EUR">EUR</button>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <span class="lbl" id="payerLbl">Bezahlt von</span>
+      <div class="seg" id="payerSeg" role="group" aria-labelledby="payerLbl">
+        <button type="button" data-v="Marcel">Marcel</button>
+        <button type="button" data-v="Bubi">Bubi</button>
+      </div>
+      <span class="hint" id="payHint" hidden></span>
+    </div>
+    <div class="field" id="splitField">
+      <span class="lbl">Aufteilung</span>
+      <div class="seg" id="splitSeg" role="group" aria-label="Aufteilung">
+        <button type="button" data-v="50">50 / 50</button>
+        <button type="button" data-v="custom">Eigene</button>
+        <button type="button" data-v="100">Nur Marcel</button>
+        <button type="button" data-v="0">Nur Bubi</button>
+      </div>
+      <div class="two" id="customSplit" hidden>
+        <div class="field"><label for="pctM">Anteil Marcel %</label><input id="pctM" inputmode="numeric" class="num"></div>
+        <div class="field"><label for="pctB">Anteil Bubi %</label><input id="pctB" inputmode="numeric" class="num"></div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="field" id="catField">
+        <label for="cat">Kategorie</label>
+        <select id="cat">
+          <option>Einkauf</option><option>Urlaub</option><option>Haushalt</option><option>Ausgang</option><option>Sonstiges</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="date">Datum</label>
+        <input id="date" type="date">
+      </div>
+    </div>
+    <div class="err" id="err" hidden></div>
+    <div class="actions">
+      <button type="button" class="ghost danger" id="del" hidden>Löschen</button>
+      <button type="submit" class="primary" style="margin-left:auto">Speichern</button>
+    </div>
+  </form>
+</div>
+
+<script src="config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Zugriff nur mit dem langen Haushalt-Code aus dem Link.
+    // Die Liste aller Haushalte kann niemand abrufen.
+    match /haushalte/{code} {
+      allow get, create: if code.size() >= 20;
+      match /{sub}/{id} {
+        allow read, write: if code.size() >= 20;
+      }
+    }
+  }
+}
