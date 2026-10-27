@@ -33,7 +33,6 @@ if (H) {
 const app = initializeApp(window.FIREBASE_CONFIG);
 const fs = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
 
-if (!H) showSetup(); else start();
 
 function showSetup() {
   $("setup").hidden = false;
@@ -267,3 +266,6 @@ $("copyLink").onclick = async () => {
 };
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+// Start erst am Ende, wenn alle Funktionen und Knöpfe bereit sind
+if (!H) showSetup(); else start();
